@@ -1,9 +1,8 @@
 # Learn React
 
-Pre-requisites
+## Pre-requisites
 
-Install npm and node
-
+### Node and NPM
 ```
 node --version
 *v8.1.3
@@ -11,6 +10,250 @@ npm --version
 *v5.0.4
 ```
 
-Install react globally
-`npm install -g react`
+### React
 
+Install react. Dont forget to save it to `package.json`
+```
+npm install --save react
+```
+Not every project folder comes with a package.json file though. Create one.
+```
+npm init -y
+```
+
+> Above adds React to an application. You would have to deal with Babel to make your application aware of JSX - the React syntax - and JavaScript ES6. Babel transpiles your code that browsers can interpret ES6 and JSX. Not all browsers are capable of interpreting the syntax. The setup includes a lot of configuration and tooling
+
+### Zero config setup
+
+```
+npm install -g create-react-app
+create-react-app --version
+create-react-app helloworld
+cd helloworld
+```
+This creates a folder structure.
+* All source is in `/src/App.js`
+* `src/App.test.js` file for tests 
+* and a `src/index.js` as entry point to the React world
+* find the `package.json` file and `node_modules/` folder to manage your node packages. 
+* The `create-react-app` application is a npm project
+
+Run the app
+```
+// Runs the application in http://localhost:3000
+npm start
+
+// Runs the tests
+npm test
+
+// Builds the application for production
+npm run build
+```
+
+## App
+
+https://stackblitz.com/edit/react-without-redux
+
+* React
+  * create-react-app bootstraps a React application
+  * JSX mixes up HTML and JavaScript to define React components
+  * components, instances and elements are different things
+  * `ReactDOM.render()` is an entry point for a React application
+  * built-in JavaScript functionalities can be used in JSX
+    * map can be used to render a list of items as HTML elements
+* ES6
+  * variable declarations with `const` and `let` for particular use cases
+  * arrow functions can be used to shorten your function declarations
+  * classes are used to define components in React
+
+
+
+## Components
+
+*Controlled Components*: Form elements such as `<input>, <textarea> and <select>` hold their own state. They modify the value internally once someone changes it from the outside. In React that’s called an uncontrolled component, because it handles its own state. In React you should make sure to make those elements controlled components.
+
+```html
+<input
+    type="text"
+    value={searchTerm}
+    onChange={this.onSearchChange}
+    />
+```
+
+### Composable Components
+
+There is one more little property which is accessible in the props object: the `children` prop. You can use it to pass elements to your components from above - which are unknown to the component itself - but make it possible to compose components into each other
+
+```JavaScript
+class Search extends Component {
+  render() {
+    const { value, onChange, children } = this.props;
+    return (
+      <form>
+        {children} <input
+          type="text"
+          value={value}
+          onChange={onChange}
+        />
+      </form>
+    );
+  }
+}
+```
+
+### Reusable Components
+
+Reusable and composable components empower you to come up with capable component hierarchies.
+
+It might seem redundant to declare such a component. You will use a Button instead of a button. It only spares the type="button". Except for the type attribute you have to define everything else when you want to use the Button component. But you have to think about the long term investment here. Imagine you have several buttons in your application, but want to change an attribute, style or behavior for the button. Without the component you would have to refactor every button. Instead the Button component ensures to have only one single source of truth. One Button to refactor all buttons at once.
+
+```JavaScript
+export class Button extends Component {
+  render() {
+    const {
+      onClick,
+      className = '',
+      children,
+    } = this.props;
+
+    return (
+      <button
+        onClick={onClick}
+        className={className}
+        type="button"
+      >
+        {children}
+      </button>
+    );
+  }
+}
+```
+
+and now its usage
+
+```JavaScript
+export class Table extends Component {
+  render() {
+    const { list, pattern, onDismiss } = this.props;
+    return (
+      <div>
+        {list.filter(isSearched(pattern)).map(item =>
+          <div key={item.objectID}>
+            <span>
+              <a href={item.url}>{item.title}</a>
+            </span>
+            <span>{item.author}</span>
+            <span>{item.num_comments}</span>
+            <span>{item.points}</span>
+            <span>
+              <Button onClick={() => onDismiss(item.objectID)}>
+                Dismiss
+              </Button>
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+}
+```
+
+## Component Declarations
+
+### Functional stateless Components
+
+These components are functions
+
+* input = props
+* output = component instances
+
+Similar to ES6 class components with following differences 
+
+* there is no internal state => you cant do `this.state` since there is no `this` object.
+* there are no lifecycle methods: `constructor()` and `render()`
+
+### ES6 class components
+
+we already used few of them above. They extend from React component. `extend` hooks all lifecycle methods available in React component. Has state which can be manipulated.
+
+### When to use which?
+
+Start with functional. If you need state or lifecycle methods, refactor it to an ES6 class component.
+
+#### Before
+
+```JavaScript
+export class SearchES6Component extends Component {
+  render() {
+    const { value, onChange, children } = this.props;
+    return (
+      <form>
+        {children} <input
+          type="text"
+          value={value}
+          onChange={onChange}
+        />
+      </form>
+    );
+  }
+}
+```
+
+#### After
+
+```JavaScript
+// functional component. no states
+// enforce only to have props as input and an element as output.
+export const Search = ({ value, onChange, children }) =>
+  (
+    <form>
+      {children} <input
+        type="text"
+        value={value}
+        onChange={onChange}
+      />
+    </form>
+  );
+```
+
+## Getting Real with an API
+
+### Lifecycle methods
+
+* Mounting process
+  * `constructor(props)`
+    * The constructor is only called when an instance of the component is created and inserted in the DOM.
+    * It is called when the component gets initialized. You can set an initial component state and bind useful class methods during that lifecycle method.
+  * `componentWillMount()`
+    * It is called before the `render()` lifecycle method. That’s why it could be used to set internal component state, because it will not trigger a second rendering of the component.
+    * Generally it is recommend to use the `constructor()` to set the initial state.
+  * `render()`
+    * The lifecycle method is mandatory and returns the elements as an output of the component.
+    * The method should be pure and therefore shouldn’t modify the component state.
+    * It gets an input as props and state and returns an element.
+    * called 2 times : mounting and update. Each time when the state or the props of a component change.
+  * `componentDidMount()`
+    * It is called only once when the component mounted.
+    * Perfect time to do an asynchronous request to fetch data from an API. The fetched data would get stored in the internal component state to display it in the render() lifecycle method.
+* update process
+  * `componentWillReceiveProps(nextProps)`
+    * Called during an update lifecycle.
+    * As input you get the next props. You can diff the next props with the previous props (this.props) to apply a different behavior based on the diff.
+    * Additionally you can set state based on the next props.
+  * `shouldComponentUpdate(nextProps, nextState)`
+    * It is always called when the component updates due to state or `props` changes.
+    * use it for performance optimizations.
+    * if return true, the component and all its children will `render()`.
+  * `componentWillUpdate(nextProps, nextState)`
+    * is immediately invoked before the `render()` method.
+    * You already have the next `props` and next `state` at your disposal.
+    * last opportunity to perform preparations before `render()`.
+    * Cannot trigger `setState()` anymore.
+    * If you want to compute `state` based on the next `props`, you have to use `componentWillReceiveProps()`.
+  * `render()`
+  * `componentDidUpdate(prevProps, prevState)`
+    * immediately invoked after the `render()`.
+    * use it as opportunity to perform DOM operations or to perform further asynchronous requests.
+* unmounting process
+  * `componentWillUnmount()`
+    * It is called before you destroy your component. You can use the lifecycle method to perform any clean up tasks.
